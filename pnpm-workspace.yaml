@@ -1,0 +1,10 @@
+# 本文件不是 monorepo 声明(没有 packages 字段,只有项目自身)。
+#
+# pnpm v12 起不再读 package.json 的 `pnpm` 字段,设置统一放这里。
+# 见 https://pnpm.io/settings
+#
+# @tiptap/* 每个包都把 peer 锁到精确版本。一旦解析出两份 prosemirror-model,
+# tiptap 只 console.warn 不报错(CI 照样绿),但运行时拆合节点会坏。
+# package.json 里已经锁死精确版本,这里是第二道保险。
+overrides:
+  '@tiptap/pm': 3.31.4
