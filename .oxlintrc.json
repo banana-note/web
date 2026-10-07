@@ -4,5 +4,39 @@
   "rules": {
     "react/rules-of-hooks": "error",
     "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
+  },
+  "overrides": [
+    {
+      "files": ["src/kernel/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": ["react", "react-dom", "@tiptap/react"],
+                "message": "内核不得依赖 React(architecture/web.md 全局不变式 #1,ADR-0002)。注意 @tiptap/react 里有 `export * from \"@tiptap/core\"`,随手一行 import 就能把 React 拖进内核,所以要连它一起禁。"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["src/extensions/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": ["**/kernel/*/*"],
+                "message": "扩展只能从内核的公开出口 import(路径以 /kernel 结尾),不许深链到 kernel 内部模块。"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
 }
