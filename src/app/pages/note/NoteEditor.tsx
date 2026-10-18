@@ -1,5 +1,7 @@
 import { EditorContent, useEditor } from '@tiptap/react'
 
+import { Bold } from '../../../extensions/bold'
+
 import { buildEditorOptions, KERNEL_BUILTIN_EXTENSIONS, type Note } from '../../../kernel'
 
 interface NoteEditorProps {
@@ -15,7 +17,7 @@ interface NoteEditorProps {
 export function NoteEditor({ note }: NoteEditorProps) {
   const editor = useEditor(
     buildEditorOptions({
-      extensions: KERNEL_BUILTIN_EXTENSIONS,
+      extensions: [...KERNEL_BUILTIN_EXTENSIONS, Bold],
       content: note.content,
       onContentError: ({ error }) => {
         /*

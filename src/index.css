@@ -46,3 +46,7 @@
 .tiptap {
   outline: none;
 }
+
+.tiptap strong {
+  font-weight: 700;
+}
