@@ -1,20 +1,9 @@
-import { Document } from '@tiptap/extension-document'
-import { Paragraph } from '@tiptap/extension-paragraph'
-import { Text } from '@tiptap/extension-text'
+import { Doc, Paragraph, Text } from '../schema/nodes'
 
 /**
- * 内核自带的最小 schema 底线,结构固定为:
+ * 内核自带的最小 schema 底线,即 `doc > paragraph > text`(ProseMirror 要求至少有 `doc` 和 `text`)。
  *
- * ```
- * doc
- * └── paragraph
- *     └── text
- * ```
- *
- * 这个边界不是品味问题,是 ProseMirror 定的:schema 里必须至少有 `doc` 和 `text`,
- * 实用上再加 `paragraph` 作默认块容器。这就是下限。
- *
- * 这三个**不是扩展清单里的扩展**,配置关不掉。除它们之外内核不带任何节点或标记——
- * 加粗、标题、列表、图片、代码块全是扩展(architecture/web.md)。
+ * 这是**可被扩展显式替换的默认集**,不是"配了就关不掉的东西";但它只可被改、不可被删,
+ * 去掉任何一个编辑器都不能工作。见 ADR-0003。
  */
-export const KERNEL_BUILTIN_EXTENSIONS = [Document, Paragraph, Text]
+export const KERNEL_BUILTIN_EXTENSIONS = [Doc, Paragraph, Text]

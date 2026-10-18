@@ -1,16 +1,12 @@
 @import "tailwindcss";
 
 /*
- * Design token。
+ * Design token,值来自 Figma Variables。改动这里必须同步改 Figma,反之亦然;
+ * 完整映射见 docs/design/note-editor.md。
  *
- * 值来自 Figma Variables(文件 `banana-note — 设计`,Page `note-editor`,集合 `Theme`)。
- * 完整的映射关系见 docs/design/note-editor.md。改动这里必须同步改 Figma,反之亦然。
- *
- * 关于间距:这里**刻意没有**定义 `--spacing-*`。
- * Tailwind v4 以 `--spacing: 0.25rem` 为基数,默认刻度 1/2/3/4/6/8/12/16 正好等于
- * 4/8/12/16/24/32/48/64px,和 Figma 的 `space/*` 完全同构。自定义 `--spacing-24: 24px`
- * 会让 `p-24` 从 96px 变成 24px,反而和框架约定打架。
- * 映射规则固定为 `N/4`:Figma `space/24` ↔ 类名 `p-6`。
+ * **刻意不定义 `--spacing-*`**:Tailwind v4 的默认刻度 1/2/3/4/6/8/12/16 正好等于
+ * 4/8/12/16/24/32/48/64px,与 Figma 的 `space/*` 同构。自定义 `--spacing-24: 24px` 会让
+ * `p-24` 从 96px 变成 24px,反而和框架约定打架。映射规则固定为 `N/4`:space/24 ↔ `p-6`。
  */
 @theme {
   --color-bg: #FAFAF9;
@@ -32,21 +28,112 @@
   --text-title: 32px;
   --text-title--line-height: 40px;
 
-  /*
-   * Figma 用的是 Noto Sans SC。这里不引 webfont(要加网络依赖),只做本地优先的字体栈,
-   * 装了就命中,没装就退到系统 CJK 字体。
-   */
+  /* Figma 用 Noto Sans SC。不引 webfont(要加网络依赖),只做本地优先的字体栈 */
   --font-sans: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
 }
 
 /*
- * ProseMirror 的可编辑元素会拿到 `.tiptap` 类(由 Editor.prependClass 加上)。
- * Tailwind 的 preflight 不会给它复位 outline,聚焦时会出现一圈浏览器默认描边。
+ * 编辑器根,也就是 `doc` 的 contentDOM——直接子元素就是 `doc` 的块级子节点,
+ * 正文空态根据根的直接子节点判断。
+ *
+ * 基准正文样式落这里而不落在各个节点上:`paragraph` 是从 tiptap 播种来的裸配置,
+ * 它的 `renderHTML` 不产出任何 class。块级节点可以自己覆盖,比如 `title` 的 `text-title`。
  */
 .tiptap {
   outline: none;
+  font-size: var(--text-body);
+  line-height: var(--text-body--line-height);
+  color: var(--color-ink);
 }
 
 .tiptap strong {
   font-weight: 700;
+}
+
+.tiptap em {
+  font-style: italic;
+}
+
+.tiptap s {
+  text-decoration-line: line-through;
+}
+
+.tiptap code {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+  padding: 0.1em 0.25em;
+  border-radius: var(--radius-sm);
+  background-color: var(--color-line);
+}
+
+.tiptap > :where(h1:not([data-note-title]), h2, h3, h4, h5, h6) {
+  margin-block: 16px 8px;
+  font-weight: 600;
+}
+
+.tiptap > h1:not([data-note-title]) {
+  margin-block-start: 24px;
+  font-size: 28px;
+  line-height: 40px;
+}
+
+.tiptap > h2 {
+  margin-block-start: 24px;
+  font-size: 24px;
+  line-height: 36px;
+}
+
+.tiptap > h3 {
+  margin-block-start: 20px;
+  font-size: 20px;
+  line-height: 32px;
+}
+
+.tiptap > h4 {
+  margin-block-start: 20px;
+  font-size: 18px;
+  line-height: 28px;
+}
+
+.tiptap > h5 {
+  font-size: 16px;
+  line-height: 28px;
+}
+
+.tiptap > h6 {
+  font-size: 14px;
+  line-height: 24px;
+}
+
+/*
+ * 空态占位符。分三层读:宿主(要有定位上下文,`::before` 才能绝对定位盖上去)、
+ * 文案(`--note-placeholder`,只给该显示的节点赋值)、外观与显示条件(空且光标不在里面)。
+ *
+ * 只有正文恰好是一个 paragraph 时才赋值；Heading 不算笔记 Title，也不会触发整体空态。
+ *
+ * `is-empty` / `has-caret` 是内核 `EmptyBlockMarker` 插件打的标记。
+ * ⚠️ `var(--note-placeholder, none)` 的 fallback 不能省:没有它,未定义的自定义属性会让
+ * `content` 在**计算值阶段**失效,变成"碰巧没事"而不是"明确不生成"。
+ */
+.tiptap :is(h1[data-note-title], p) {
+  position: relative;
+}
+
+.tiptap h1[data-note-title] {
+  --note-placeholder: "无标题";
+}
+
+.tiptap > p:only-child,
+.tiptap > h1[data-note-title]:first-child + p:last-child {
+  --note-placeholder: "开始记录…";
+}
+
+.tiptap :is(h1[data-note-title], p).is-empty:not(.has-caret)::before {
+  content: var(--note-placeholder, none);
+  position: absolute;
+  inset-inline-start: 0;
+  top: 0;
+  color: var(--color-ink-muted);
+  /* 占位符不是可点的东西——少了这条,点它会落在伪元素上,光标进不去那个块 */
+  pointer-events: none;
 }
