@@ -9,7 +9,7 @@ import { Paragraph } from '../../kernel'
  * 所以 Enter 本来是按了没反应。这个命令把那一键接回来:
  *
  * - 光标在标题**中间** → 吞掉按键,什么都不发生
- * - 光标在标题**末尾** → 在正文开头插入一个空段落,光标落进去
+ * - 光标在标题**末尾** → 进入正文开头的空段落,必要时新建
  * - 不在标题里 → 返回 `false`,交给内核的 Enter
  */
 export const enterFromTitle: Command = (state, dispatch) => {
@@ -26,7 +26,12 @@ export const enterFromTitle: Command = (state, dispatch) => {
   // `$from.after()` 是标题节点之后的位置,也就是正文的开头
   if (dispatch) {
     const at = $from.after()
-    const tr = state.tr.insert(at, schema.nodes[Paragraph.name].create())
+    const paragraph = schema.nodes[Paragraph.name]
+    const firstBodyBlock = state.doc.nodeAt(at)
+    const tr = state.tr
+    if (firstBodyBlock?.type !== paragraph || firstBodyBlock.content.size !== 0) {
+      tr.insert(at, paragraph.create())
+    }
     tr.setSelection(TextSelection.near(tr.doc.resolve(at + 1)))
     dispatch(tr.scrollIntoView())
   }
