@@ -1,7 +1,9 @@
 import { EditorContent, useEditor } from '@tiptap/react'
 
 import { Bold } from '../../../extensions/bold'
+import { ClearInlineFormatting } from '../../../extensions/clearInlineFormatting'
 import { Code } from '../../../extensions/code'
+import { EditHistory } from '../../../extensions/editHistory'
 import { Heading } from '../../../extensions/heading'
 import { Italic } from '../../../extensions/italic'
 import { Strike } from '../../../extensions/strike'
@@ -23,6 +25,8 @@ const EXTENSIONS = composeExtensions(KERNEL_BUILTIN_EXTENSIONS, [
   Strike,
   Code,
   Heading,
+  EditHistory,
+  ClearInlineFormatting,
   EmptyBlockMarker,
 ])
 
