@@ -1,6 +1,8 @@
 import { Extension, type Editor } from '@tiptap/core'
 import { closeHistory } from '@tiptap/pm/history'
-import { AllSelection, TextSelection } from '@tiptap/pm/state'
+import { AllSelection, Plugin, PluginKey, TextSelection } from '@tiptap/pm/state'
+
+const clearNoteKey = new PluginKey('clearNote')
 
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {
@@ -34,10 +36,23 @@ export const ClearNote = Extension.create({
         const emptyNote = state.schema.node('doc', null, [emptyTitle, paragraph.create()])
         const transaction = state.tr.replaceWith(0, state.doc.content.size, emptyNote.content)
         transaction.setSelection(TextSelection.near(transaction.doc.resolve(1)))
-        dispatch(closeHistory(transaction.scrollIntoView()))
+        dispatch(closeHistory(transaction.setMeta(clearNoteKey, true).scrollIntoView()))
         return true
       },
     }
+  },
+
+  addProseMirrorPlugins() {
+    return [
+      new Plugin({
+        key: clearNoteKey,
+        appendTransaction(transactions, _oldState, newState) {
+          if (!transactions.some(tr => tr.getMeta(clearNoteKey))) return null
+          // Start a fresh undo group for anything typed after clearing.
+          return closeHistory(newState.tr)
+        },
+      }),
+    ]
   },
 
   addKeyboardShortcuts() {
